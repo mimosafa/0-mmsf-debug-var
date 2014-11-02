@@ -15,7 +15,7 @@ class mmsf_var_dump {
 
 	private $hook = '';
 
-	private function __construct( $var, $hook ) {
+	private function __construct( $var, $hook = '' ) {
 		$this -> vars = $var;
 
 		if ( !$hook ) {
@@ -29,7 +29,7 @@ class mmsf_var_dump {
 		}
 	}
 
-	private function var_dump() {
+	public function var_dump() {
 		echo '<pre>';
 		var_dump( $this -> vars );
 		echo '</pre>';
