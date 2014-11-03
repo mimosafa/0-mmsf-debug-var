@@ -9,6 +9,18 @@ Version: 0.0
 Author URI: http://mimosafa.me/
 */
 
+/**
+ *
+ */
+if ( !function_exists( '_var_dump' ) ) {
+	function _var_dump( $var ) {
+		mmsf_var_dump::vars( $var );
+	}
+}
+
+/**
+ *
+ */
 class mmsf_var_dump {
 
 	private $vars;
@@ -21,6 +33,8 @@ class mmsf_var_dump {
 		if ( !$hook ) {
 			if ( is_admin() ) {
 				$this -> hook = 'admin_notices';
+			} else {
+				$this -> hook = 'wp_footer';
 			}
 		}
 
@@ -39,13 +53,4 @@ class mmsf_var_dump {
 		$cl = new self( $var );
 	}
 
-}
-
-/**
- *
- */
-if ( !function_exists( '_var_dump' ) ) {
-	function _var_dump( $var ) {
-		mmsf_var_dump::vars( $var );
-	}
 }
