@@ -5,7 +5,7 @@ Plugin Name: MMSF Degug Var
 Plugin URI: 
 Description: 
 Author: mmsf
-Version: 0.0
+Version: 1.0
 Author URI: http://mimosafa.me/
 */
 
@@ -14,63 +14,72 @@ Author URI: http://mimosafa.me/
  */
 if ( !function_exists( '_var_dump' ) ) {
 	function _var_dump( $var ) {
-		mmsf_var_dump::vars( $var, $hook = '' );
+		MMSF_DEBUG_VAR::var_dump( $var );
 	}
+}
+
+if ( defined( 'WP_DEBUG' ) && true === \WP_DEBUG ) {
+	MMSF_DEBUG_VAR::init();
 }
 
 /**
  *
  */
-class mmsf_var_dump {
+class MMSF_DEBUG_VAR {
 
-	private $vars;
-	private $file;
-	private $line;
+	const ACTION_HOOK   = 'admin_notices';
 
-	private $hook = '';
+	/**
+	 * @var array
+	 */
+	private static $vars = [];
 
-	private function __construct( $var, $hook ) {
-		$this -> vars = $var;
-		$backtrace = debug_backtrace();
-		foreach ( $backtrace as $arg ) {
-			if ( $arg['file'] === __FILE__ ) {
-				continue;
+	public static function init() {
+		add_action( MMSF_DEBUG_VAR::ACTION_HOOK, 'MMSF_DEBUG_VAR::display_vars' );
+	}
+
+	/**
+	 *
+	 */
+	public static function var_dump( $var ) {
+		if ( did_action( MMSF_DEBUG_VAR::ACTION_HOOK ) ) {
+			//
+		} else {
+			$vars = array();
+			$vars['var'] = $var;
+			$backtrace = debug_backtrace( false );
+			foreach ( $backtrace as $arg ) {
+				if ( $arg['file'] === __FILE__ ) {
+					continue;
+				}
+				$vars['file'] = $arg['file'];
+				$vars['line'] = $arg['line'];
+				break;
 			}
-			$this -> file = $arg['file'];
-			$this -> line = $arg['line'];
-			break;
-		}
-
-		if ( !$hook ) {
-			if ( is_admin() ) {
-				$this -> hook = 'admin_notices';
-			} else {
-				$this -> hook = 'wp_footer';
-			}
-		}
-
-		if ( $this -> hook ) {
-			add_action( $this -> hook, [ $this, 'var_dump' ] );
+			MMSF_DEBUG_VAR::$vars[] = $vars;
 		}
 	}
 
-	public function var_dump() {
-		?>
-<div class="message updated">
-  <dl>
-    <dt>File</dt>
-    <dd><?= $this -> file ?></dd>
-    <dt>Line</dt>
-    <dd><?= $this -> line ?></dd>
-  <pre>
-<?= var_dump( $this -> vars ) ?>
-  </pre>
-</div>
-		<?php
-	}
-
-	public static function vars( $var, $hook ) {
-		$cl = new self( $var, $hook );
+	/**
+	 *
+	 */
+	public static function display_vars() {
+		if ( is_super_admin() && MMSF_DEBUG_VAR::$vars ) {
+			foreach ( MMSF_DEBUG_VAR::$vars as $vars ) {
+				?>
+    <div class="message updated">
+      <dl>
+        <dt>File</dt>
+        <dd><?= $vars['file'] ?></dd>
+        <dt>Line</dt>
+        <dd><?= $vars['line'] ?></dd>
+      <pre>
+    <?= var_dump( $vars['var'] ) ?>
+      </pre>
+    </div>
+				<?php
+			}
+		}
 	}
 
 }
