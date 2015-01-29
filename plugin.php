@@ -33,7 +33,13 @@ class MMSF_DEBUG_VAR {
 	private static $vars = [];
 
 	public static function init() {
-		$hook = is_admin() ? 'admin_notices' : 'wp_footer';
+		if ( is_admin() ) {
+			$hook = 'admin_notices';
+			add_action( 'admin_head', 'MMSF_DEBUG_VAR::stylesheet' );
+		} else {
+			$hook = 'wp_footer';
+			add_action( 'wp_head', 'MMSF_DEBUG_VAR::stylesheet' );
+		}
 		add_action( $hook, 'MMSF_DEBUG_VAR::display_vars' );
 	}
 
@@ -72,7 +78,9 @@ class MMSF_DEBUG_VAR {
 			foreach ( MMSF_DEBUG_VAR::$vars as $vars ) {
 				$i = 0;
 				?>
-    <div class="message updated">
+    <div class="message mmsf-debug-var-message">
+      <p><b>Variable</b></p>
+      <pre><?php var_dump( $vars['var'] ); ?></pre>
       <?php foreach ( $vars['backtrace'] as $array ) { ?>
       <dl>
         <dt><b><?php echo '# ', ++$i; ?></b></dt>
@@ -82,13 +90,28 @@ class MMSF_DEBUG_VAR {
         <dd><?php echo $array['line']; ?></dd>
       </dl>
       <?php } ?>
-      <pre>
-    <?php var_dump( $vars['var'] ); ?>
-      </pre>
     </div>
 				<?php
 			}
 		}
+	}
+
+	public static function stylesheet() {
+		if ( !is_super_admin() || !MMSF_DEBUG_VAR::$vars ) {
+			return;
+		}
+		echo <<<EOF
+<style type="text/css">
+  .mmsf-debug-var-message {
+  	background: #fff;
+  	border-left: 4px solid #ccc;
+  	-webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
+  	        box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
+  	padding: 1px 12px;
+  	margin: 5px 0 15px;
+  }
+</style>
+EOF;
 	}
 
 }
