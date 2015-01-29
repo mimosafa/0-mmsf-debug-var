@@ -13,8 +13,8 @@ Author URI: http://mimosafa.me/
  *
  */
 if ( !function_exists( '_var_dump' ) ) {
-	function _var_dump( $var ) {
-		mmsf_var_dump::vars( $var, $hook = '' );
+	function _var_dump( $var, $back_to = 1 ) {
+		mmsf_var_dump::vars( $var, $back_to );
 	}
 }
 
@@ -24,44 +24,40 @@ if ( !function_exists( '_var_dump' ) ) {
 class mmsf_var_dump {
 
 	private $vars;
-	private $file;
-	private $line;
+	private $backtrace = array();
 
-	private $hook = '';
-
-	private function __construct( $var, $hook ) {
-		$this -> vars = $var;
-		$backtrace = debug_backtrace();
-		foreach ( $backtrace as $arg ) {
+	private function __construct( $var, $back_to ) {
+		$this->vars = $var;
+		$debug_backtrace = debug_backtrace();
+		foreach ( $debug_backtrace as $arg ) {
 			if ( $arg['file'] === __FILE__ ) {
 				continue;
 			}
-			$this -> file = $arg['file'];
-			$this -> line = $arg['line'];
-			break;
-		}
-
-		if ( !$hook ) {
-			if ( is_admin() ) {
-				$this -> hook = 'admin_notices';
-			} else {
-				$this -> hook = 'wp_footer';
+			$this -> backtrace[] = array(
+				'file' => $arg['file'],
+				'line' => $arg['line']
+			);
+			$back_to--;
+			if ( !$back_to ) {
+				break;
 			}
 		}
 
-		if ( $this -> hook ) {
-			add_action( $this -> hook, [ $this, 'var_dump' ] );
-		}
+		$hook = is_admin() ? 'admin_notices' : 'wp_footer';
+		add_action( $hook, array( $this, 'var_dump' ) );
 	}
 
 	public function var_dump() {
 		?>
 <div class="message updated">
+  <?php foreach ( $this->backtrace as $array ) { ?>
   <dl>
     <dt>File</dt>
-    <dd><?= $this -> file ?></dd>
+    <dd><?php echo $array['file']; ?></dd>
     <dt>Line</dt>
-    <dd><?= $this -> line ?></dd>
+    <dd><?php echo $array['line']; ?></dd>
+  </dl>
+  <?php } ?>
   <pre>
 <?= var_dump( $this -> vars ) ?>
   </pre>
@@ -69,8 +65,10 @@ class mmsf_var_dump {
 		<?php
 	}
 
-	public static function vars( $var, $hook ) {
-		$cl = new self( $var, $hook );
+	public static function vars( $var, $back_to ) {
+		if ( absint( $back_to ) && 0 < $back_to ) {
+			$cl = new self( $var, $back_to );
+		}
 	}
 
 }
