@@ -82,8 +82,10 @@ class MMSF_DEBUG_VAR {
       <p><b>Variable</b></p>
       <pre><?php var_dump( $vars['var'] ); ?></pre>
       <?php foreach ( $vars['backtrace'] as $array ) { ?>
+      <hr>
       <dl>
-        <dt><b><?php echo '# ', ++$i; ?></b></dt>
+        <dt>#</dt>
+        <dd><?php echo ++$i; ?></dd>
         <dt>File</dt>
         <dd><?php echo $array['file']; ?></dd>
         <dt>Line</dt>
@@ -109,6 +111,15 @@ class MMSF_DEBUG_VAR {
   	        box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
   	padding: 1px 12px;
   	margin: 5px 0 15px;
+  }
+  .mmsf-debug-var-message dt {
+  	clear: left;
+  	float: left;
+  	width: 5em;
+  	font-weight: bold;
+  }
+  .mmsf-debug-var-message dd {
+  	margin-left: 5em;
   }
 </style>
 EOF;
